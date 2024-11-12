@@ -1,0 +1,120 @@
+#!/bin/bash
+
+createAddressBook()
+{
+    if [ -e addressbook.txt ]
+    then
+        echo "Address book is already created"
+    else
+        touch addressbook.txt
+        echo "Welcome to the address book"
+    fi
+}
+
+insertRecord()
+{
+    while true
+    do
+        echo "To add a record in address book, please insert record in this format:"
+        echo "Format: \"Last name,First name,email,phone number\" (no quotes or spaces)."
+        echo "Example: Modern,College,Pune411005"
+        echo "To quit, press 'q'."
+        read aInput
+
+        if [ "$aInput" = 'q' ]
+        then
+            break
+        fi
+
+        echo "$aInput" >> addressbook.txt    
+        echo "Record Inserted"
+    done
+}
+
+viewRecord()
+{
+    while true
+    do
+        echo "To display a record, enter the last name of the person (case sensitive)"
+        read dInput
+        if [ "$dInput" = 'q' ]
+        then
+            break
+        fi
+        echo "Display record $dInput:"
+        grep "$dInput" addressbook.txt
+        RETURNSTATUS=`echo $?`
+        if [ $RETURNSTATUS -eq 1 ]
+        then
+            echo "No record found"
+        fi
+    done
+}
+
+searchRecord()
+{
+    while true
+    do
+        echo "To search a record, enter the last name of the person (case sensitive)"
+        read dInput
+        if [ "$dInput" = 'q' ]
+        then
+            break
+        fi
+        echo "Display record $dInput:"
+        grep "$dInput" addressbook.txt
+        RETURNSTATUS=`echo $?`
+        if [ $RETURNSTATUS -eq 1 ]
+        then
+            echo "No record found"
+        fi
+    done
+}
+
+deleteRecord()
+{
+    while true
+    do
+        echo "To delete a record, enter the last name of the person or email (case sensitive)"
+        echo "To finish, press 'q' to quit."    
+        read rInput
+        if [ "$rInput" = 'q' ]
+        then
+            break
+        fi
+        echo "Display record $rInput:"
+        grep -n "$rInput" addressbook.txt
+        RETURNSTATUS=`echo $?`
+        if [ $RETURNSTATUS -eq 1 ]
+        then
+            echo "No record found"
+        else
+            echo "Enter line number to remove"
+            read lineNumber
+            sed -i "${lineNumber}d" addressbook.txt
+            echo "The record was removed from the address book."
+        fi
+    done
+}
+
+while true
+do
+    echo "Address book options:"
+    echo "1 --> Create address book"
+    echo "2 --> Insert Record"
+    echo "3 --> View Record"
+    echo "4 --> Search Record"
+    echo "5 --> Delete Record"
+    echo "To quit, press 'q'."
+    read input
+
+    case $input in
+        1) createAddressBook;;
+        2) insertRecord;;
+        3) viewRecord;;
+        4) searchRecord;;
+        5) deleteRecord;;
+        q) break;;
+        *) echo "Invalid option, please try again.";;
+    esac
+done

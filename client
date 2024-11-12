@@ -1,0 +1,80 @@
+#include <stdio.h>
+#include <semaphore.h>
+#include <pthread.h>
+#include <stdlib.h>
+
+#define MAX_ITEMS 5
+#define BUFFER_SIZE 5
+
+pthread_mutex_t mutex;
+sem_t empty, full;
+int in = 0, out = 0;
+int buffer[BUFFER_SIZE];
+
+void *producer(void *pno) {
+    int item;
+    for (int i = 0; i < MAX_ITEMS; i++) {
+        item = rand() % 100;  // Generate a random item
+        sem_wait(&empty);      // Wait if buffer is full
+        pthread_mutex_lock(&mutex);
+
+        buffer[in] = item;
+        printf("Producer %d placed item %d in buffer at %d\n", *(int*)pno, buffer[in], in);
+        in = (in + 1) % BUFFER_SIZE;
+
+        pthread_mutex_unlock(&mutex);
+        sem_post(&full);       // Signal that buffer has items
+    }
+    return NULL;
+}
+
+void *consumer(void *cno) {
+    for (int i = 0; i < MAX_ITEMS; i++) {
+        sem_wait(&full);       // Wait if buffer is empty
+        pthread_mutex_lock(&mutex);
+
+        int item = buffer[out];
+        printf("Consumer %d consumed item %d from buffer at %d\n", *(int*)cno, item, out);
+        out = (out + 1) % BUFFER_SIZE;
+
+        pthread_mutex_unlock(&mutex);
+        sem_post(&empty);      // Signal that buffer has space
+    }
+    return NULL;
+}
+
+int main() {
+    pthread_t prod[5], cons[5];
+    pthread_mutex_init(&mutex, NULL);
+    sem_init(&empty, 0, BUFFER_SIZE);
+    sem_init(&full, 0, 0);
+
+    int a[5] = {1, 2, 3, 4, 5};  // IDs for producers and consumers
+
+    // Create producer threads
+    for (int i = 0; i < 5; i++) {
+        pthread_create(&prod[i], NULL, producer, &a[i]);
+    }
+
+    // Create consumer threads
+    for (int i = 0; i < 5; i++) {
+        pthread_create(&cons[i], NULL, consumer, &a[i]);
+    }
+
+    // Wait for all producer threads
+    for (int i = 0; i < 5; i++) {
+        pthread_join(prod[i], NULL);
+    }
+
+    // Wait for all consumer threads
+    for (int i = 0; i < 5; i++) {
+        pthread_join(cons[i], NULL);
+    }
+
+    // Cleanup semaphores and mutex
+    pthread_mutex_destroy(&mutex);
+    sem_destroy(&empty);
+    sem_destroy(&full);
+
+    return 0;
+}
